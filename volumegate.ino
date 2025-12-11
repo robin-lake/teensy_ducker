@@ -32,16 +32,17 @@ AudioConnection          patchCord6(amp4, 0, mixer1, 3);
 AudioConnection          patchCord7(amp3, 0, mixer1, 2);
 AudioConnection          patchCord8(amp1, 0, mixer1, 0);
 AudioConnection          patchCord9(amp2, 0, mixer1, 1);
-AudioConnection          patchCord10(mixer1, 0, comp1, 0);
-AudioConnection          patchCord11(comp1, 0, i2s2, 0);
-AudioConnection          patchCord12(comp1, 0, i2s2, 1);
+// Bypass compressor - connect mixer directly to output
+// AudioConnection          patchCord10(mixer1, 0, comp1, 0);
+AudioConnection          patchCord11(mixer1, 0, i2s2, 0);
+AudioConnection          patchCord12(mixer1, 0, i2s2, 1);
 // GUItool: end automatically generated code
 
 
 uint32_t  mytime = 0;
 float amplitude = 1.0;
 float volume_floor = 0.0;
-int hold = 10;
+int hold = 1000;
 int release = 100;
 int a1history=0;
 
