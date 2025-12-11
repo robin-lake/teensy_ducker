@@ -60,23 +60,45 @@ int hold = 100;
 int release = 100;
 int a1history=0;
 
+// Non-blocking ducking state machine variables
+bool ducking = false;
+elapsedMillis duck_timer = 0;
+float current_gain = amplitude;
 
-void release_rise() {
-  float current_gain = volume_floor;
-  float step = (amplitude - volume_floor) / release;
-  for (int i = 0; i < release; i++) {
-    current_gain += step;
-    amp3.gain(current_gain);
-    amp4.gain(current_gain);
-    delay(1);
+
+// Non-blocking ducking state machine
+void duck() {
+  if (!ducking) {
+    // Start ducking
+    ducking = true;
+    duck_timer = 0;
+    current_gain = volume_floor;
+    amp3.gain(volume_floor);
+    amp4.gain(volume_floor);
   }
 }
 
-void duck() {
- amp3.gain(volume_floor);
- amp4.gain(volume_floor);
- delay(hold);
- release_rise();
+void update_duck() {
+  if (ducking) {
+    if (duck_timer < (unsigned long)hold) {
+      // Still in hold phase - keep volume at floor
+      amp3.gain(volume_floor);
+      amp4.gain(volume_floor);
+    } else if (duck_timer < (unsigned long)(hold + release)) {
+      // Release phase - gradually increase gain
+      int release_elapsed = duck_timer - (unsigned long)hold;
+      float release_ratio = (float)release_elapsed / (float)release;
+      current_gain = volume_floor + (amplitude - volume_floor) * release_ratio;
+      amp3.gain(current_gain);
+      amp4.gain(current_gain);
+    } else {
+      // Release complete - back to normal
+      ducking = false;
+      current_gain = amplitude;
+      amp3.gain(amplitude);
+      amp4.gain(amplitude);
+    }
+  }
 }
 
 // code for turning knob
@@ -87,14 +109,12 @@ void adjust_hold_and_release() {
     // Knob has changed significantly - update hold time
     hold = a1/2;
     release = a1/4;
-    // if (hold < 10) hold = 10;      // Minimum hold time (10ms)
+    if (hold < 10) hold = 10;      // Minimum hold time (10ms)
     if (hold > 1000) hold = 1000; // Maximum hold time (1000ms = 1 second)
+    if (release < 10) release = 10; // Minimum release time
+    if (release > 500) release = 500; // Maximum release time
     a1history = a1;
-    Serial.print("Knob changed - A1: ");
-    Serial.print(a1);
-    Serial.print(", hold set to: ");
-    Serial.print(hold);
-    Serial.println(" ms");
+    // Removed Serial.print to avoid blocking audio
   }
 }
 
@@ -112,6 +132,9 @@ void setup() {
     // Main audio (amps 3&4) will be ducked when sidechain is loud
     amp3.gain(amplitude);
     amp4.gain(amplitude);
+    // Initialize ducking state
+    ducking = false;
+    current_gain = amplitude;
     // Initialize FFT mixers (set all channels to 1.0 for summing)
     mixer_amp12.gain(0, 1.0);
     mixer_amp12.gain(1, 1.0);
@@ -135,9 +158,9 @@ void setup() {
 }
 
 void loop() {
-  // Debug: Check raw audio peak level and system status
+  // Debug: Check raw audio peak level and system status (reduced frequency)
   static elapsedMillis debug_timer = 0;
-  if (debug_timer > 1000) {  // Every 1 second
+  if (debug_timer > 5000) {  // Every 5 seconds (reduced to avoid blocking)
     Serial.println("=== Audio System Status ===");
     
     // Check audio memory usage
@@ -205,6 +228,9 @@ void loop() {
     debug_timer = 0;
   }
   
+  // Update ducking state machine (non-blocking)
+  update_duck();
+  
   // adjust hold and release time based on knob
   adjust_hold_and_release();
   
@@ -212,13 +238,11 @@ void loop() {
   if (fft1024_1.available()) {
     float level_sum = fft1024_1.read(0, 5);
     if (level_sum > 0.08) {
-      if (hold > 10){
-        duck();
-      }
+      duck();
     }
   }
   
-  delay(10);  // Small delay to prevent overwhelming serial output
+  // No delay needed - audio processing is real-time
 }
 
 
