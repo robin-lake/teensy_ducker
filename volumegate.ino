@@ -52,6 +52,8 @@ AudioConnection          patchCord11(mixer1, 0, i2s2, 0);
 AudioConnection          patchCord12(mixer1, 0, i2s2, 1);
 // GUItool: end automatically generated code
 
+// Debug flag - set to true to enable Serial.print statements
+#define DEBUG false
 
 uint32_t  mytime = 0;
 float amplitude = 1.0;
@@ -124,7 +126,9 @@ void setup() {
     // configure serial
     Serial.begin(115200);
     delay(1000);  // Wait for serial to be ready
-    Serial.println("Volumegate starting...");
+    if (DEBUG) {
+      Serial.println("Volumegate starting...");
+    }
     // Initialize amplifier gains - CRITICAL!
     // Sidechain (amps 1&2) stays at full volume
     amp1.gain(1.0);
@@ -146,21 +150,25 @@ void setup() {
     mixer_amp34.gain(3, 0.0);
     // knob
     a1history = analogRead(A1);
-    Serial.print("Initial A1 reading: ");
-    Serial.println(a1history);
+    if (DEBUG) {
+      Serial.print("Initial A1 reading: ");
+      Serial.println(a1history);
+    }
     // initialize compressor
   // comp1.set_default_values(-40.0f, 4.0f, 1000.0f, 30.0f);
   comp1.set_default_values(-0.0f, 4.0f, 1000.0f, 30.0f);
   
   // Give FFT time to accumulate samples
-  Serial.println("Waiting for FFT to initialize...");
+  if (DEBUG) {
+    Serial.println("Waiting for FFT to initialize...");
+  }
   delay(500);
 }
 
 void loop() {
   // Debug: Check raw audio peak level and system status (reduced frequency)
   static elapsedMillis debug_timer = 0;
-  if (debug_timer > 5000) {  // Every 5 seconds (reduced to avoid blocking)
+  if (DEBUG && debug_timer > 5000) {  // Every 5 seconds (reduced to avoid blocking)
     Serial.println("=== Audio System Status ===");
     
     // Check audio memory usage
@@ -228,19 +236,19 @@ void loop() {
     debug_timer = 0;
   }
   
-  // Update ducking state machine (non-blocking)
-  update_duck();
+  // // Update ducking state machine (non-blocking)
+  // update_duck();
   
-  // adjust hold and release time based on knob
-  adjust_hold_and_release();
+  // // adjust hold and release time based on knob
+  // adjust_hold_and_release();
   
-  // Check FFT in main loop (more frequently) - trigger on source 1 (sidechain)
-  if (fft1024_1.available()) {
-    float level_sum = fft1024_1.read(0, 5);
-    if (level_sum > 0.08) {
-      duck();
-    }
-  }
+  // // Check FFT in main loop (more frequently) - trigger on source 1 (sidechain)
+  // if (fft1024_1.available()) {
+  //   float level_sum = fft1024_1.read(0, 5);
+  //   if (level_sum > 0.08) {
+  //     duck();
+  //   }
+  // }
   
   // No delay needed - audio processing is real-time
 }
