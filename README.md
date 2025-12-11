@@ -1,4 +1,7 @@
 Teensy audio project sidechain ducker. Uses some chips, 1808 something and another one 
+chips:
+PCM1808
+PCM5102
 
 Compressor diagram:
 https://raw.githubusercontent.com/p-hlp/CTAGDRC/refs/heads/master/Documentation/Base-Diagram.png

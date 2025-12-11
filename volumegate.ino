@@ -86,7 +86,8 @@ void setup() {
     // knob
     a1history = analogRead(A1);
     // initialize compressor
-  comp1.set_default_values(-40.0f, 4.0f, 1000.0f, 30.0f);
+  // comp1.set_default_values(-40.0f, 4.0f, 1000.0f, 30.0f);
+  comp1.set_default_values(-0.0f, 4.0f, 1000.0f, 30.0f);
 }
 
 void loop() {
