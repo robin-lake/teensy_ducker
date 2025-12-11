@@ -57,7 +57,7 @@ uint32_t  mytime = 0;
 float amplitude = 1.0;
 float volume_floor = 0.0;
 int hold = 100;
-int release = 1000;
+int release = 100;
 int a1history=0;
 
 
@@ -80,18 +80,22 @@ void duck() {
 }
 
 // code for turning knob
-void wait(unsigned int milliseconds) {
-  elapsedMillis msec=0;
-    while (msec <= milliseconds) {
-      int a1 = analogRead(A1);
-      if (a1 > a1history + 50 || a1 < a1history - 50) {
-        Serial.print("Knob (pin A1) = ");
-        Serial.println(a1);
-        // hold = a1/10;
-        hold = a1;
-        a1history = a1;
-      }
-    }
+void adjust_hold_and_release() {
+  // Read knob and update hold time (non-blocking)
+  int a1 = analogRead(A1);
+  if (a1 > a1history + 5 || a1 < a1history - 5) {
+    // Knob has changed significantly - update hold time
+    hold = a1/2;
+    release = a1/4;
+    // if (hold < 10) hold = 10;      // Minimum hold time (10ms)
+    if (hold > 1000) hold = 1000; // Maximum hold time (1000ms = 1 second)
+    a1history = a1;
+    Serial.print("Knob changed - A1: ");
+    Serial.print(a1);
+    Serial.print(", hold set to: ");
+    Serial.print(hold);
+    Serial.println(" ms");
+  }
 }
 
 void setup() {
@@ -201,11 +205,16 @@ void loop() {
     debug_timer = 0;
   }
   
+  // adjust hold and release time based on knob
+  adjust_hold_and_release();
+  
   // Check FFT in main loop (more frequently) - trigger on source 1 (sidechain)
   if (fft1024_1.available()) {
     float level_sum = fft1024_1.read(0, 5);
     if (level_sum > 0.08) {
-      duck();
+      if (hold > 10){
+        duck();
+      }
     }
   }
   
