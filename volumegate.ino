@@ -53,7 +53,8 @@ AudioConnection          patchCord12(mixer1, 0, i2s2, 1);
 // GUItool: end automatically generated code
 
 // Debug flag - set to true to enable Serial.print statements
-#define DEBUG false
+#define DEBUG true
+// #define DEBUG false
 
 uint32_t  mytime = 0;
 float amplitude = 1.0;
@@ -236,19 +237,19 @@ void loop() {
     debug_timer = 0;
   }
   
-  // // Update ducking state machine (non-blocking)
-  // update_duck();
+  // Update ducking state machine (non-blocking)
+  update_duck();
   
-  // // adjust hold and release time based on knob
-  // adjust_hold_and_release();
+  // adjust hold and release time based on knob
+  adjust_hold_and_release();
   
-  // // Check FFT in main loop (more frequently) - trigger on source 1 (sidechain)
-  // if (fft1024_1.available()) {
-  //   float level_sum = fft1024_1.read(0, 5);
-  //   if (level_sum > 0.08) {
-  //     duck();
-  //   }
-  // }
+  // Check FFT in main loop (more frequently) - trigger on source 1 (sidechain)
+  if (fft1024_1.available()) {
+    float level_sum = fft1024_1.read(0, 5);
+    if (level_sum > 0.08) {
+      duck();
+    }
+  }
   
   // No delay needed - audio processing is real-time
 }
