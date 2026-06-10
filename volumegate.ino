@@ -46,10 +46,9 @@ AudioConnection          patchCord17(amp4, 0, mixer_amp34, 1);  // amp4 → mixe
 // FFT connections - analyze each source separately
 AudioConnection          patchCord18(mixer_amp12, 0, fft1024_1, 0);  // amps 1&2 → fft1
 AudioConnection          patchCord19(mixer_amp34, 0, fft1024_2, 0);  // amps 3&4 → fft2
-// Bypass compressor - connect mixer directly to output
-// AudioConnection          patchCord10(mixer1, 0, comp1, 0);
-AudioConnection          patchCord11(mixer1, 0, i2s2, 0);
-AudioConnection          patchCord12(mixer1, 0, i2s2, 1);
+AudioConnection          patchCord10(mixer1, 0, comp1, 0);
+AudioConnection          patchCord11(comp1, 0, i2s2, 0);
+AudioConnection          patchCord12(comp1, 0, i2s2, 1);
 // GUItool: end automatically generated code
 
 // Debug flag - set to true to enable Serial.print statements
